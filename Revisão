@@ -1,0 +1,136 @@
+app.py---------------------------------------------------------------------------
+from flask import Flask, render_template, request, redirect
+import sqlite3
+
+app = Flask(__name__)
+
+def obter_conexao():
+    conn = sqlite3.connect('jogo.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/personagens/novo', methods=['GET', 'POST'])
+def novo_personagem():
+    if request.method == 'POST':
+        nome = request.form.get('nome', '')
+        jogo = request.form.get('jogo', '')
+        habilidade = request.form.get('habilidade', '')
+
+        if nome and jogo and habilidade:
+            conn = obter_conexao()
+            SQL = "INSERT INTO personagens (nome, jogo_origem, habilidade_principal) VALUES (?, ?, ?)"
+            conn.execute(SQL, (nome, jogo, habilidade))
+            conn.commit()
+            conn.close()
+
+        return redirect('/personagens')
+
+    return render_template('novo_personagem.html')
+
+@app.route('/personagens')
+
+
+def listar_personagens():
+    conn = obter_conexao()
+
+iniciar.py ------------------------------------------------------------------
+import sqlite3
+
+conexao = sqlite3.connect('jogo.db')
+with open('schema.sql') as f:
+    conexao.executescript(f.read())
+conexao.close()
+
+schema.sql ----------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS personagens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    jogo_origem TEXT NOT NULL,
+    habilidade_principal TEXT NOT NULL
+);
+
+HTML------------------
+base.html
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Personagens{% endblock %}</title>
+</head>
+<body>
+    <h1>{% block titulo %}{% endblock %}</h1>
+    <hr>
+    {% block conteudo %}{% endblock %}
+</body>
+</html>
+
+index.html ----------------------------------------------------------------
+{% extends 'base.html' %}
+
+{% block title %}Início{% endblock %}
+{% block titulo %}Página Inicial{% endblock %}
+
+{% block conteudo %}
+<p>Este é um sistema para cadastro de personagens de jogos.</p>
+<p>Você pode:</p>
+<ul>
+    <li><a href="/personagens/novo">Cadastrar novo personagem</a></li>
+    <li><a href="/personagens">Listar todos os personagens</a></li>
+</ul>
+{% endblock %}
+
+novo_personagem.html --------------------------------------------------
+{% extends 'base.html' %}
+
+{% block title %}Novo Personagem{% endblock %}
+{% block titulo %}Cadastro de Novo Personagem{% endblock %}
+
+{% block conteudo %}
+<form method="POST">
+    <label>Nome:</label><br>
+    <input type="text" name="nome" required><br><br>
+
+    <label>Jogo de Origem:</label><br>
+    <input type="text" name="jogo" required><br><br>
+
+    <label>Habilidade Principal:</label><br>
+    <input type="text" name="habilidade" required><br><br>
+
+    <button type="submit">Cadastrar</button>
+</form>
+{% endblock %}
+
+listar_personagens.html -------------------------------------------------
+{% extends 'base.html' %}
+
+{% block title %}Lista de Personagens{% endblock %}
+{% block titulo %}Personagens Cadastrados{% endblock %}
+
+{% block conteudo %}
+<table border="1">
+    <tr>
+        <th>Nome</th>
+        <th>Jogo de Origem</th>
+        <th>Habilidade Principal</th>
+    </tr>
+    {% for p in lista %}
+    <tr>
+        <td>{{ p.nome }}</td>
+        <td>{{ p.jogo_origem }}</td>
+        <td>{{ p.habilidade_principal }}</td>
+    </tr>
+    {% else %}
+    <tr>
+        <td colspan="3">Nenhum personagem cadastrado.</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
+
+
+
