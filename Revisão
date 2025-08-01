@@ -36,6 +36,10 @@ def novo_personagem():
 
 def listar_personagens():
     conn = obter_conexao()
+    SQL = "SELECT * FROM personagens"
+    lista = conn.execute(SQL).fetchall()
+    conn.close()
+    return render_template('listar_personagens.html',lista=lista)
 
 iniciar.py ------------------------------------------------------------------
 import sqlite3
